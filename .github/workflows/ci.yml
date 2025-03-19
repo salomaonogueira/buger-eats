@@ -62,6 +62,9 @@ jobs:
           AMQP_URL: ${{ secrets.AMQP_URL }}
           QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
 
+      - name: ⏳ Aguardar API
+        run: npx wait-on http://localhost:3001 # Ajuste a porta se necessário
+
       - name: 🧪 Executar Testes de API
         run: .venv/bin/robot tests/api
 
@@ -79,6 +82,9 @@ jobs:
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
+
+      - name: ⚙️ Inicializar Robot Framework Browser
+        run: .venv/bin/rfbrowser init
 
       - name: 🚀 Instalar Dependências Web (Node.js)
         run: cd web && npm install
