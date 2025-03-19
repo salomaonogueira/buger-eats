@@ -22,21 +22,17 @@ jobs:
           .venv/bin/pip install -r requirements.txt
         shell: bash
 
-      - name: 🚀 Iniciar API e Web
+      - name: 🚀 Instalar Dependências do Node.js
         run: |
-          cd api && npm install && npm start &
-          cd ../web && npm install && npm start &
+          cd api && npm install
+          cd ../web && npm install
         shell: bash
 
-      - name: ⏳ Aguardar Web subir
-        run: sleep 30
-
-      - name: 🔄 Verificar se Web está rodando
+      - name: 🚀 Iniciar API e Web
         run: |
-          curl --retry 5 --retry-delay 5 --retry-connrefused -v http://localhost:3000/ || (
-            echo "❌ ERRO: O WEB NÃO ESTÁ RESPONDENDO!"
-            exit 1
-          )
+          cd api && npm start &
+          cd ../web && npm start &
+          npx wait-on http://localhost:3000
         shell: bash
 
       - name: 🤖 Executar Testes Automatizados
