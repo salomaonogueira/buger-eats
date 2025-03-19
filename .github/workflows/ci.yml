@@ -26,13 +26,17 @@ jobs:
         run: |
           cd api && npm install && npm start &
           cd ../web && npm install && npm start &
-          sleep 20
         shell: bash
 
-      - name: 🔄 Verificar se API e Web estão rodando
+      - name: ⏳ Aguardar Web subir
+        run: sleep 30
+
+      - name: 🔄 Verificar se Web está rodando
         run: |
-          curl --retry 5 --retry-delay 5 --retry-connrefused -v http://localhost:3333/ || exit 1
-          curl --retry 5 --retry-delay 5 --retry-connrefused -v http://localhost:3000/ || exit 1
+          curl --retry 5 --retry-delay 5 --retry-connrefused -v http://localhost:3000/ || (
+            echo "❌ ERRO: O WEB NÃO ESTÁ RESPONDENDO!"
+            exit 1
+          )
         shell: bash
 
       - name: 🤖 Executar Testes Automatizados
