@@ -1,66 +1,62 @@
 name: buger-eats
 
 on:
-    push:
-      branches:
-        - main
-        - develop
-    pull_request:
-      branches:
-        - main
-        - develop
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
 
 jobs:
-    test:
-      runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-latest
 
-      steps:
-        - name: Checkout do Código
-          uses: actions/checkout@v4
+    steps:
+      - name: Checkout do Código
+        uses: actions/checkout@v4
 
-        - name: Configurar Python
-          uses: actions/setup-python@v4
-          with:
-            python-version: '3.10'
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-        - name: 📦 Instalar dependências
-          run: |
-              python -m venv .venv
-              source .venv/bin/activate
-              pip install --upgrade pip
-              pip install -r requirements.txt
+      - name: 📦 Instalar dependências
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
-        - name: 🔧 Criar Arquivo `.env`
-          run: |
-            echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> api/.env
-            echo "MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}" >> api/.env
-            echo "MONGO_COLLECTION_NAME=${{ secrets.MONGO_COLLECTION_NAME }}" >> api/.env
-            echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
-            echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
+      - name: 🔧 Criar Arquivo `.env`
+        run: |
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> api/.env
+          echo "MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}" >> api/.env
+          echo "MONGO_COLLECTION_NAME=${{ secrets.MONGO_COLLECTION_NAME }}" >> api/.env
+          echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
+          echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
 
-        - name:  Instalar Dependências
-          run: |
-            python -m venv .venv
-            source .venv/bin/activate
-            pip install -r requirements.txt
+      - name: Debug `.env`
+        run: cat api/.env
 
-        - name:  Instalar Robot Framework e Bibliotecas
-          run: |
-            source .venv/bin/activate
-            pip install robotframework
-            pip install robotframework-seleniumlibrary
-            pip install robotframework-requests
-            pip install robotframework-browser
-            rfbrowser init
+      - name: Instalar Robot Framework e Bibliotecas
+        run: |
+          source .venv/bin/activate
+          pip install robotframework
+          pip install robotframework-seleniumlibrary
+          pip install robotframework-requests
+          pip install robotframework-browser
+          rfbrowser init --headless
 
-        - name:  Executar Testes Automatizados
-          run: |
-            source .venv/bin/activate
-            robot -d results tests/web
+      - name: Executar Testes Automatizados
+        run: |
+          source .venv/bin/activate
+          xvfb-run -a robot -d results tests/web
 
-        - name: Armazenar Relatórios e Logs
-          uses: actions/upload-artifact@v4
-
-          with:
-            name: relatorios-de-testes
-            path: results
+      - name: Armazenar Relatórios e Logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-de-testes
+          path: results
