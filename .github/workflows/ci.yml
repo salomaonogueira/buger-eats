@@ -14,6 +14,10 @@ jobs:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
+      - name: 🧐 Diagnóstico: Listar Arquivos do Repositório
+        run: ls -la
+        shell: bash
+
       - name: 📦 Configurar Ambiente
         run: |
           sudo apt update && sudo apt install -y xvfb
@@ -24,14 +28,15 @@ jobs:
 
       - name: 🚀 Instalar Dependências do Node.js
         run: |
-          cd api && npm install
-          cd ../web && npm install
+          if [ -d "api" ]; then cd api && npm install; else echo "❌ ERRO: Pasta API não encontrada!"; exit 1; fi
+          if [ -d "web" ]; then cd ../web && npm install; else echo "❌ ERRO: Pasta WEB não encontrada!"; exit 1; fi
         shell: bash
 
       - name: 🚀 Iniciar API e Web
         run: |
           cd api && npm start &
-          cd ../web && npm start &
+          sleep 5
+          if [ -d "../web" ]; then cd ../web && npm start & else echo "❌ ERRO: Pasta WEB não encontrada!"; exit 1; fi
           npx wait-on http://localhost:3000
         shell: bash
 
