@@ -14,9 +14,8 @@ jobs:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
-      - name: Diagnóstico: Listar Arquivos do Repositório
+      - name: 🧐 Diagnóstico: Listar Arquivos do Repositório
         run: ls -la
-        shell: bash
 
       - name: 📦 Configurar Ambiente
         run: |
@@ -24,13 +23,19 @@ jobs:
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
-        shell: bash
+
+      - name: 🔧 Criar Arquivo `.env` para a API
+        run: |
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" > api/.env
+          echo "MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}" >> api/.env
+          echo "MONGO_COLLECTION_NAME=${{ secrets.MONGO_COLLECTION_NAME }}" >> api/.env
+          echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
+          echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
 
       - name: 🚀 Instalar Dependências do Node.js
         run: |
           if [ -d "api" ]; then cd api && npm install; else echo "❌ ERRO: Pasta API não encontrada!"; exit 1; fi
           if [ -d "web" ]; then cd ../web && npm install; else echo "❌ ERRO: Pasta WEB não encontrada!"; exit 1; fi
-        shell: bash
 
       - name: 🚀 Iniciar API e Web
         run: |
@@ -39,10 +44,15 @@ jobs:
           if [ -d "../web" ]; then cd ../web && npm start & else echo "❌ ERRO: Pasta WEB não encontrada!"; exit 1; fi
           npx wait-on http://localhost:3000
         shell: bash
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
+          MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
+          AMQP_URL: ${{ secrets.AMQP_URL }}
+          QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
 
       - name: 🤖 Executar Testes Automatizados
         run: xvfb-run -a .venv/bin/robot --variable BROWSER:chromium --variable HEADLESS:True -d results tests/web
-        shell: bash
 
       - name: 📤 Armazenar Relatórios e Logs
         uses: actions/upload-artifact@v4
