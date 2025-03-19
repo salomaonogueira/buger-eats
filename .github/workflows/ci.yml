@@ -7,19 +7,36 @@ on:
     branches: [main, develop]
 
 jobs:
-  test:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      api_exists: ${{ steps.check_api.outputs.exists }}
+      web_exists: ${{ steps.check_web.outputs.exists }}
 
     steps:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
-      - name: 🧐 Diagnóstico: Listar Arquivos do Repositório
-        run: ls -la
-
-      - name: 📦 Configurar Ambiente
+      - name: Verificar Existência da Pasta API
+        id: check_api
         run: |
-          sudo apt update && sudo apt install -y xvfb
+          if [ -d "api" ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Verificar Existência da Pasta Web
+        id: check_web
+        run: |
+          if [ -d "web" ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+
+  api-test:
+    needs: setup
+    if: needs.setup.outputs.api_exists == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: 📦 Configurar Ambiente Python
+        run: |
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
@@ -32,17 +49,11 @@ jobs:
           echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
           echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
 
-      - name: 🚀 Instalar Dependências do Node.js
-        run: |
-          if [ -d "api" ]; then cd api && npm install; else echo "❌ ERRO: Pasta API não encontrada!"; exit 1; fi
-          if [ -d "web" ]; then cd ../web && npm install; else echo "❌ ERRO: Pasta WEB não encontrada!"; exit 1; fi
+      - name: 🚀 Instalar Dependências da API (Node.js)
+        run: cd api && npm install
 
-      - name: 🚀 Iniciar API e Web
-        run: |
-          cd api && npm start &
-          sleep 5
-          if [ -d "../web" ]; then cd ../web && npm start & else echo "❌ ERRO: Pasta WEB não encontrada!"; exit 1; fi
-          npx wait-on http://localhost:3000
+      - name: 🚀 Iniciar API
+        run: cd api && npm start &
         shell: bash
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
@@ -51,7 +62,38 @@ jobs:
           AMQP_URL: ${{ secrets.AMQP_URL }}
           QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
 
-      - name: 🤖 Executar Testes Automatizados
+      - name: ⏳ Aguardar API
+        run: npx wait-on http://localhost:3333
+
+      - name: 🧪 Executar Testes de API
+        run: .venv/bin/robot tests/api
+
+  web-test:
+    needs: [setup, api-test]
+    if: needs.setup.outputs.web_exists == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: 📦 Configurar Ambiente
+        run: |
+          sudo apt update && sudo apt install -y xvfb
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r requirements.txt
+
+      - name: 🚀 Instalar Dependências Web (Node.js)
+        run: cd web && npm install
+
+      - name: 🚀 Iniciar Web
+        run: cd web && npm start &
+        shell: bash
+
+      - name: ⏳ Aguardar Web
+        run: npx wait-on http://localhost:3000
+
+      - name: 🤖 Executar Testes Automatizados Web
         run: xvfb-run -a .venv/bin/robot --variable BROWSER:chromium --variable HEADLESS:True -d results tests/web
 
       - name: 📤 Armazenar Relatórios e Logs
