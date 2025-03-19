@@ -23,6 +23,13 @@ jobs:
           with:
             python-version: '3.10'
 
+        - name: 📦 Instalar dependências
+          run: |
+              python -m venv .venv
+              source .venv/bin/activate
+              pip install --upgrade pip
+              pip install -r requirements.txt
+
         - name: 🔧 Criar Arquivo `.env`
           run: |
             echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> api/.env
