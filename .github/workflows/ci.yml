@@ -1,58 +1,58 @@
 name: buger-eats
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
-      - develop
+    push:
+      branches:
+        - main
+        - develop
+    pull_request:
+      branches:
+        - main
+        - develop
 
 jobs:
-  test:
-    name: 🚀 Executar Testes Robot Framework
-    runs-on: ubuntu-latest
+    test:
+      runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        browser: [chromium, firefox]  # Executa os testes nos dois navegadores
+      steps:
+        - name: ⬇️ Checkout do Código
+          uses: actions/checkout@v4
 
-    steps:
-      - name: ⬇️ Checkout do Código
-        uses: actions/checkout@v4
+        - name: 🐍 Configurar Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.10'
 
-      - name: ⚙️ Configurar Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+        - name: 🔧 Criar Arquivo `.env`
+          run: |
+            echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> api/.env
+            echo "MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}" >> api/.env
+            echo "MONGO_COLLECTION_NAME=${{ secrets.MONGO_COLLECTION_NAME }}" >> api/.env
+            echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
+            echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
 
-      - name: 📦 Instalar Dependências
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install -r requirements.txt
+        - name: 📦 Instalar Dependências
+          run: |
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install -r requirements.txt
 
-      - name: 🌎 Instalar Navegadores Playwright
-        run: |
-          source .venv/bin/activate
-          playwright install
-          playwright install-deps
+        - name: 📌 Instalar Robot Framework e Bibliotecas
+          run: |
+            source .venv/bin/activate
+            pip install robotframework
+            pip install robotframework-seleniumlibrary
+            pip install robotframework-requests
+            pip install robotframework-browser
+            rfbrowser init
 
-      - name: 🔎 Rodar Testes de API
-        run: |
-          source .venv/bin/activate
-          robot -d logs tests/api
+        - name: 🚀 Executar Testes Automatizados
+          run: |
+            source .venv/bin/activate
+            robot -d results tests/web
 
-      - name: 🌐 Rodar Testes de Interface Web com ${ { matrix.browser } }
-        run: |
-          source .venv/bin/activate
-          robot -v BROWSER:${{ matrix.browser }} -d logs tests/web
-
-      - name: 📤 Fazer Upload dos Logs de Testes
-        uses: actions/upload-artifact@v4
-        with:
-          name: Relatorios-de-Testes
-          path: logs/
-          retention-days: 7
+        - name: 📁 Armazenar Relatórios e Logs
+          uses: actions/upload-artifact@v3
+          with:
+            name: relatorios-de-testes
+            path: results
