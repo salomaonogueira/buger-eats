@@ -39,45 +39,36 @@ jobs:
           echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
         shell: bash
 
-      - name: 🧐 Verificar Arquivo `.env`
-        run: cat api/.env
-
       - name: 📦 Instalar dependências do Node.js
         run: |
           cd api && npm install
           cd ../web && npm install
         shell: bash
 
-      - name: 📦 Instalar XVFB
-        run: sudo apt-get update && sudo apt-get install -y xvfb
-
-      - name: 🚀 Iniciar API
+      - name: 🚀 Iniciar API e Web em background
         run: |
-          cd api
-          nohup npm start &  # Inicia API na porta 3333
-          sleep 10
-        shell: bash
-        env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}
-          MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
-          MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
-          AMQP_URL: ${{ secrets.AMQP_URL }}
-          QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
-
-      - name: 🚀 Iniciar Web
-        run: |
-          cd web
-          nohup npm start &  # Inicia Frontend na porta 3000
-          sleep 10
+          cd api && npm start > ../../api.log 2>&1 &
+          cd ../web && npm start > ../../web.log 2>&1 &
         shell: bash
 
-      - name: ⏳ Aguardar Inicialização dos Servidores
-        run: sleep 20
+      - name: ⏳ Aguardar API e Web subirem
+        run: sleep 30  # Tempo suficiente para garantir que os serviços estejam prontos
+
+      - name: 🧐 Verificar logs da API e do Web
+        run: |
+          echo "📜 Log da API:"
+          cat api.log | tail -n 20
+          echo "📜 Log do Web:"
+          cat web.log | tail -n 20
+        shell: bash
 
       - name: 🔄 Verificar se API e Web estão rodando
         run: |
-          curl --retry 5 --retry-delay 10 --retry-connrefused -v http://localhost:3333/ || exit 1
-          curl --retry 5 --retry-delay 10 --retry-connrefused -v http://localhost:3000/ || exit 1
+          curl --retry 10 --retry-delay 5 --retry-connrefused -v http://localhost:3333/ || exit 1
+          curl --retry 10 --retry-delay 5 --retry-connrefused -v http://localhost:3000/ || exit 1
+
+      - name: 📦 Instalar XVFB
+        run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: 🖥️ Instalar Robot Framework e Bibliotecas
         run: |
