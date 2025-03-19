@@ -23,9 +23,10 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 📦 Instalar dependências
+      - name: 📦 Criar e ativar ambiente virtual
         run: |
           python -m venv .venv
+          echo "source .venv/bin/activate" >> $GITHUB_ENV
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
         shell: bash
@@ -39,22 +40,22 @@ jobs:
           echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
         shell: bash
 
-      - name: 🛠 Debug `.env`
+      - name: 🧐 Verificar Arquivo `.env`
         run: cat api/.env
 
-      - name: 🌐 Instalar Robot Framework e Bibliotecas
+      - name: 📦 Instalar dependências do Node.js
         run: |
-          .venv/bin/pip install robotframework
-          .venv/bin/pip install robotframework-seleniumlibrary
-          .venv/bin/pip install robotframework-requests
-          .venv/bin/pip install robotframework-browser
-          .venv/bin/rfbrowser init
+          cd api && npm install
+          cd ../web && npm install
         shell: bash
 
-      - name: 🚀 Iniciar Servidor API e Web
+      - name: 📦 Instalar XVFB
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: 🚀 Iniciar API
         run: |
-          cd api && nohup npm start &
-          cd ../web && nohup npm start &
+          cd api
+          nohup npm start &
         shell: bash
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
@@ -63,16 +64,36 @@ jobs:
           AMQP_URL: ${{ secrets.AMQP_URL }}
           QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
 
+      - name: 🚀 Iniciar Frontend
+        run: |
+          cd web
+          nohup npm start &
+        shell: bash
+
       - name: ⏳ Aguardar Inicialização do Servidor
         run: sleep 15
 
-      - name: 🧪 Executar Testes Automatizados
+      - name: 🔄 Verificar se API e Web estão rodando
         run: |
-          .venv/bin/xvfb-run -a .venv/bin/robot --variable BROWSER:chromium --variable HEADLESS:True -d results tests/web
+          curl --retry 5 --retry-delay 10 --retry-connrefused -v http://localhost:3000/ || exit 1
+          curl --retry 5 --retry-delay 10 --retry-connrefused -v http://localhost:3001/ || exit 1
+
+      - name: 🖥️ Instalar Robot Framework e Bibliotecas
+        run: |
+          .venv/bin/pip install robotframework
+          .venv/bin/pip install robotframework-seleniumlibrary
+          .venv/bin/pip install robotframework-requests
+          .venv/bin/pip install robotframework-browser
+          .venv/bin/rfbrowser init
+        shell: bash
+
+      - name: 🤖 Executar Testes Automatizados
+        run: |
+          xvfb-run -a .venv/bin/robot --variable BROWSER:chromium --variable HEADLESS:True -d results tests/web
         shell: bash
 
       - name: 📤 Armazenar Relatórios e Logs
         uses: actions/upload-artifact@v4
         with:
           name: relatorios-de-testes
-          path: results
+          path: results/
