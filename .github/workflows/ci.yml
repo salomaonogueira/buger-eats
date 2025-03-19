@@ -62,9 +62,6 @@ jobs:
           AMQP_URL: ${{ secrets.AMQP_URL }}
           QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
 
-      - name: ⏳ Aguardar API
-        run: npx wait-on http://localhost:3001 # Ajuste a porta se necessário
-
       - name: 🧪 Executar Testes de API
         run: .venv/bin/robot tests/api
 
@@ -92,9 +89,6 @@ jobs:
       - name: 🚀 Iniciar Web
         run: cd web && npm start &
         shell: bash
-
-      - name: ⏳ Aguardar Web
-        run: npx wait-on http://localhost:3000
 
       - name: 🤖 Executar Testes Automatizados Web
         run: xvfb-run -a .venv/bin/robot --variable BROWSER:chromium --variable HEADLESS:True -d results tests/web
