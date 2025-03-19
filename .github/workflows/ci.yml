@@ -1,0 +1,58 @@
+name: buger-eats
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    name: 🚀 Executar Testes Robot Framework
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        browser: [chromium, firefox]  # Executa os testes nos dois navegadores
+
+    steps:
+      - name: ⬇️ Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: 📦 Instalar Dependências
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: 🌎 Instalar Navegadores Playwright
+        run: |
+          source .venv/bin/activate
+          playwright install
+          playwright install-deps
+
+      - name: 🔎 Rodar Testes de API
+        run: |
+          source .venv/bin/activate
+          robot -d logs tests/api
+
+      - name: 🌐 Rodar Testes de Interface Web com ${ { matrix.browser } }
+        run: |
+          source .venv/bin/activate
+          robot -v BROWSER:${{ matrix.browser }} -d logs tests/web
+
+      - name: 📤 Fazer Upload dos Logs de Testes
+        uses: actions/upload-artifact@v4
+        with:
+          name: Relatorios-de-Testes
+          path: logs/
+          retention-days: 7

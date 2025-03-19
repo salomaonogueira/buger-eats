@@ -1,0 +1,5 @@
+{
+  "python.analysis.extraPaths": [
+    "c:/workspace/projetos/Robot/buger-eats-partner-ms/resources/factories"
+  ]
+}
