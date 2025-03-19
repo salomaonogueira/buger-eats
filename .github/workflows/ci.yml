@@ -2,13 +2,9 @@ name: buger-eats CI
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
 
 jobs:
   test:
@@ -18,65 +14,25 @@ jobs:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
-      - name: 🐍 Configurar Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: 📦 Criar ambiente virtual e instalar dependências
+      - name: 📦 Configurar Ambiente
         run: |
+          sudo apt update && sudo apt install -y xvfb
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
         shell: bash
 
-      - name: 🔧 Criar Arquivo `.env`
+      - name: 🚀 Iniciar API e Web
         run: |
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" > api/.env
-          echo "MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}" >> api/.env
-          echo "MONGO_COLLECTION_NAME=${{ secrets.MONGO_COLLECTION_NAME }}" >> api/.env
-          echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
-          echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
-        shell: bash
-
-      - name: 📦 Instalar dependências do Node.js
-        run: |
-          cd api && npm install
-          cd ../web && npm install
-        shell: bash
-
-      - name: 🚀 Iniciar API e Web em background
-        run: |
-          cd api && npm start > ../../api.log 2>&1 &
-          cd ../web && npm start > ../../web.log 2>&1 &
-        shell: bash
-
-      - name: ⏳ Aguardar API e Web subirem
-        run: sleep 30  # Tempo suficiente para garantir que os serviços estejam prontos
-
-      - name: 🧐 Verificar logs da API e do Web
-        run: |
-          echo "📜 Log da API:"
-          cat api.log | tail -n 20
-          echo "📜 Log do Web:"
-          cat web.log | tail -n 20
+          cd api && npm install && npm start &
+          cd ../web && npm install && npm start &
+          sleep 20
         shell: bash
 
       - name: 🔄 Verificar se API e Web estão rodando
         run: |
-          curl --retry 10 --retry-delay 5 --retry-connrefused -v http://localhost:3333/ || exit 1
-          curl --retry 10 --retry-delay 5 --retry-connrefused -v http://localhost:3000/ || exit 1
-
-      - name: 📦 Instalar XVFB
-        run: sudo apt-get update && sudo apt-get install -y xvfb
-
-      - name: 🖥️ Instalar Robot Framework e Bibliotecas
-        run: |
-          .venv/bin/pip install robotframework
-          .venv/bin/pip install robotframework-seleniumlibrary
-          .venv/bin/pip install robotframework-requests
-          .venv/bin/pip install robotframework-browser
-          .venv/bin/rfbrowser init
+          curl --retry 5 --retry-delay 5 --retry-connrefused -v http://localhost:3333/ || exit 1
+          curl --retry 5 --retry-delay 5 --retry-connrefused -v http://localhost:3000/ || exit 1
         shell: bash
 
       - name: 🤖 Executar Testes Automatizados
