@@ -50,6 +50,20 @@ jobs:
           pip install robotframework-browser
           rfbrowser init
 
+      - name: Iniciar Servidor
+        run: |
+          source .venv/bin/activate
+          python -m api.app &
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
+          MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
+          AMQP_URL: ${{ secrets.AMQP_URL }}
+          QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
+
+      - name: Aguarde Inicialização do Servidor
+        run: sleep 10
+
       - name: Executar Testes Automatizados
         run: |
           source .venv/bin/activate
