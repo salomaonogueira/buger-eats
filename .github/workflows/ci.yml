@@ -15,10 +15,10 @@ jobs:
       runs-on: ubuntu-latest
 
       steps:
-        - name: ⬇️ Checkout do Código
+        - name: Checkout do Código
           uses: actions/checkout@v4
 
-        - name: 🐍 Configurar Python
+        - name: Configurar Python
           uses: actions/setup-python@v4
           with:
             python-version: '3.10'
@@ -31,13 +31,13 @@ jobs:
             echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
             echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
 
-        - name: 📦 Instalar Dependências
+        - name:  Instalar Dependências
           run: |
             python -m venv .venv
             source .venv/bin/activate
             pip install -r requirements.txt
 
-        - name: 📌 Instalar Robot Framework e Bibliotecas
+        - name:  Instalar Robot Framework e Bibliotecas
           run: |
             source .venv/bin/activate
             pip install robotframework
@@ -46,13 +46,14 @@ jobs:
             pip install robotframework-browser
             rfbrowser init
 
-        - name: 🚀 Executar Testes Automatizados
+        - name:  Executar Testes Automatizados
           run: |
             source .venv/bin/activate
             robot -d results tests/web
 
-        - name: 📁 Armazenar Relatórios e Logs
-          uses: actions/upload-artifact@v3
+        - name: Armazenar Relatórios e Logs
+          uses: actions/upload-artifact@v4
+
           with:
             name: relatorios-de-testes
             path: results
