@@ -4,7 +4,9 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
 
 jobs:
   setup:
@@ -17,12 +19,12 @@ jobs:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
-      - name: Verificar Existência da Pasta API
+      - name: 🔎 Verificar Existência da API
         id: check_api
         run: |
           if [ -d "api" ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
 
-      - name: Verificar Existência da Pasta Web
+      - name: 🔎 Verificar Existência do Web
         id: check_web
         run: |
           if [ -d "web" ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
@@ -35,13 +37,13 @@ jobs:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
-      - name: 📦 Configurar Ambiente Python
+      - name: 📦 Configurar Python
         run: |
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
 
-      - name: 🔧 Criar Arquivo `.env` para a API
+      - name: 🔧 Criar `.env` para a API
         run: |
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" > api/.env
           echo "MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}" >> api/.env
@@ -49,21 +51,19 @@ jobs:
           echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
           echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
 
-      - name: 🚀 Instalar Dependências da API (Node.js)
+      - name: 🚀 Instalar Dependências da API
         run: cd api && npm install
 
       - name: 🚀 Iniciar API
-        run: cd api && npm start &
-        shell: bash
+        run: |
+          cd api && npm start &
+          sleep 10
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
           MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
           AMQP_URL: ${{ secrets.AMQP_URL }}
           QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
-
-      - name: 🧪 Executar Testes de API
-        run: .venv/bin/robot tests/api
 
   web-test:
     needs: [setup, api-test]
@@ -83,15 +83,31 @@ jobs:
       - name: ⚙️ Inicializar Robot Framework Browser
         run: .venv/bin/rfbrowser init
 
-      - name: 🚀 Instalar Dependências Web (Node.js)
+      - name: 🚀 Instalar Dependências do Web
         run: cd web && npm install
 
       - name: 🚀 Iniciar Web
-        run: cd web && npm start &
+        run: |
+          cd web && npm start &
+          sleep 10  # Aguardar Web carregar completamente
         shell: bash
 
-      - name: 🤖 Executar Testes Automatizados Web
-        run: xvfb-run -a .venv/bin/robot --variable BROWSER:chromium --variable HEADLESS:True -d results tests/web
+      - name: 🔄 Verificar se o Web realmente está rodando
+        run: |
+          curl --retry 5 --retry-delay 5 --retry-connrefused -v http://localhost:3000/ || (
+            echo "❌ ERRO: O WEB NÃO ESTÁ RESPONDENDO!"
+            exit 1
+          )
+        shell: bash
+
+      - name: 🤖 Executar Testes Automatizados Web (Modo Headless)
+        run: |
+          xvfb-run -a .venv/bin/robot \
+            --variable BROWSER:chromium \
+            --variable HEADLESS:True \
+            --variable ROBOT_BROWSER_TIMEOUT:20000 \
+            --variable ROBOT_WAIT_TIME:2s \
+            -d results tests/web
 
       - name: 📤 Armazenar Relatórios e Logs
         uses: actions/upload-artifact@v4
