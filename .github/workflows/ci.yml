@@ -23,10 +23,9 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 📦 Criar e ativar ambiente virtual
+      - name: 📦 Criar ambiente virtual e instalar dependências
         run: |
           python -m venv .venv
-          echo "source .venv/bin/activate" >> $GITHUB_ENV
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
         shell: bash
@@ -55,7 +54,8 @@ jobs:
       - name: 🚀 Iniciar API
         run: |
           cd api
-          nohup npm start &
+          nohup npm start &  # Inicia API na porta 3333
+          sleep 10
         shell: bash
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
@@ -64,19 +64,20 @@ jobs:
           AMQP_URL: ${{ secrets.AMQP_URL }}
           QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
 
-      - name: 🚀 Iniciar Frontend
+      - name: 🚀 Iniciar Web
         run: |
           cd web
-          nohup npm start &
+          nohup npm start &  # Inicia Frontend na porta 3000
+          sleep 10
         shell: bash
 
-      - name: ⏳ Aguardar Inicialização do Servidor
-        run: sleep 15
+      - name: ⏳ Aguardar Inicialização dos Servidores
+        run: sleep 20
 
       - name: 🔄 Verificar se API e Web estão rodando
         run: |
+          curl --retry 5 --retry-delay 10 --retry-connrefused -v http://localhost:3333/ || exit 1
           curl --retry 5 --retry-delay 10 --retry-connrefused -v http://localhost:3000/ || exit 1
-          curl --retry 5 --retry-delay 10 --retry-connrefused -v http://localhost:3001/ || exit 1
 
       - name: 🖥️ Instalar Robot Framework e Bibliotecas
         run: |
@@ -88,8 +89,7 @@ jobs:
         shell: bash
 
       - name: 🤖 Executar Testes Automatizados
-        run: |
-          xvfb-run -a .venv/bin/robot --variable BROWSER:chromium --variable HEADLESS:True -d results tests/web
+        run: xvfb-run -a .venv/bin/robot --variable BROWSER:chromium --variable HEADLESS:True -d results tests/web
         shell: bash
 
       - name: 📤 Armazenar Relatórios e Logs
