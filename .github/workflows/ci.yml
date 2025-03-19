@@ -1,4 +1,4 @@
-name: CI - Buger Eats
+name: buger-eats CI
 
 on:
   push:
@@ -23,39 +23,39 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 📦 Criar e ativar ambiente virtual
+      - name: 📦 Instalar dependências
         run: |
           python -m venv .venv
-          echo "source .venv/bin/activate" >> $GITHUB_ENV
-          source .venv/bin/activate
-
-      - name: 📦 Instalar dependências do Python
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r requirements.txt
+        shell: bash
 
       - name: 🔧 Criar Arquivo `.env`
         run: |
-          mkdir -p api
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" > api/.env
           echo "MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}" >> api/.env
           echo "MONGO_COLLECTION_NAME=${{ secrets.MONGO_COLLECTION_NAME }}" >> api/.env
           echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
           echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
+        shell: bash
 
-      - name: 🧐 Verificar Arquivo `.env`
+      - name: 🛠 Debug `.env`
         run: cat api/.env
 
-      - name: 📦 Instalar dependências do Node.js (API e Web)
+      - name: 🌐 Instalar Robot Framework e Bibliotecas
         run: |
-          cd api && npm install
-          cd ../web && npm install
+          .venv/bin/pip install robotframework
+          .venv/bin/pip install robotframework-seleniumlibrary
+          .venv/bin/pip install robotframework-requests
+          .venv/bin/pip install robotframework-browser
+          .venv/bin/rfbrowser init
+        shell: bash
 
-      - name: 🚀 Iniciar API
+      - name: 🚀 Iniciar Servidor API e Web
         run: |
-          cd api
-          npm start &
-          sleep 10
+          cd api && nohup npm start &
+          cd ../web && nohup npm start &
+        shell: bash
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
@@ -63,28 +63,16 @@ jobs:
           AMQP_URL: ${{ secrets.AMQP_URL }}
           QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
 
-      - name: 🚀 Iniciar Frontend
-        run: |
-          cd web
-          npm start &
-          sleep 10
+      - name: ⏳ Aguardar Inicialização do Servidor
+        run: sleep 15
 
-      - name: 🔄 Verificar se API e Web Estão Rodando
+      - name: 🧪 Executar Testes Automatizados
         run: |
-          curl --retry 5 --retry-delay 10 --retry-connrefused -v http://localhost:3000/ || exit 1
-          curl --retry 5 --retry-delay 10 --retry-connrefused -v http://localhost:3001/ || exit 1
-
-      - name: 🖥️ Instalar Robot Framework e Bibliotecas
-        run: |
-          pip install robotframework robotframework-seleniumlibrary robotframework-requests robotframework-browser
-          rfbrowser init
-
-      - name: 🤖 Executar Testes Automatizados
-        run: |
-          xvfb-run -a robot --variable BROWSER:chromium --variable HEADLESS:True -d results tests/web
+          .venv/bin/xvfb-run -a .venv/bin/robot --variable BROWSER:chromium --variable HEADLESS:True -d results tests/web
+        shell: bash
 
       - name: 📤 Armazenar Relatórios e Logs
         uses: actions/upload-artifact@v4
         with:
           name: relatorios-de-testes
-          path: results/
+          path: results
