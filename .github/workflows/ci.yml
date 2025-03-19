@@ -14,7 +14,7 @@ jobs:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
-      - name: 🧐 Diagnóstico: Listar Arquivos do Repositório
+      - name: Diagnóstico: Listar Arquivos do Repositório
         run: ls -la
         shell: bash
 
