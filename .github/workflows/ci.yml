@@ -62,9 +62,6 @@ jobs:
           AMQP_URL: ${{ secrets.AMQP_URL }}
           QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
 
-      - name: ⏳ Aguardar API
-        run: npx wait-on http://localhost:3333
-
       - name: 🧪 Executar Testes de API
         run: .venv/bin/robot tests/api
 
