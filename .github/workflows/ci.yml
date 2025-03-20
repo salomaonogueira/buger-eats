@@ -109,13 +109,13 @@ jobs:
 
       - name: 🤖 Executar Testes Automatizados Web (modo headless)
         run: |
-          .venv/bin/robot \
-            --variable BROWSER:chromium \
-            --variable HEADLESS:True \
-            --variable TIMEOUT:30000 \
-            --variable RETRY:2 \
-            --variable BROWSER_ARGS:--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--headless \
-            -d results tests/web
+            xvfb-run .venv/bin/robot \
+              --variable BROWSER:chromium \
+              --variable HEADLESS:True \
+              --variable TIMEOUT:30000 \
+              --variable RETRY:2 \
+              --variable BROWSER_ARGS:--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--disable-software-rasterizer,--disable-setuid-sandbox,--headless \
+              -d results tests/web
 
       - name: 📤 Armazenar Relatórios e Logs
         uses: actions/upload-artifact@v4
