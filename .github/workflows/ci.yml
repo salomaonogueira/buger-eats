@@ -80,10 +80,8 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: 🖥️ Instalar Google Chrome e Playwright
+      - name: 🖥️ Instalar Playwright e Dependências
         run: |
-          sudo apt update
-          sudo apt install -y google-chrome-stable
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
@@ -109,14 +107,14 @@ jobs:
             fi
           done
 
-      - name: 🤖 Executar Testes Automatizados Web
+      - name: 🤖 Executar Testes Automatizados Web (modo headless)
         run: |
           .venv/bin/robot \
             --variable BROWSER:chromium \
             --variable HEADLESS:True \
             --variable TIMEOUT:30000 \
             --variable RETRY:2 \
-            --variable BROWSER_ARGS:--no-sandbox,--disable-dev-shm-usage,--disable-gpu \
+            --variable BROWSER_ARGS:--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--headless \
             -d results tests/web
 
       - name: 📤 Armazenar Relatórios e Logs
