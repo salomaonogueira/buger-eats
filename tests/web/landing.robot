@@ -2,6 +2,7 @@
 Documentation         Página inicial
 Resource              ../../resources/base.resource
 
+
 Suite Setup           Start session
 Suite Teardown        Close Browser
 

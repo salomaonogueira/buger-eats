@@ -3,6 +3,7 @@ Documentation         Página de administrador
 
 Resource              ../../resources/base.resource
 
+Suite Setup    Set Browser Timeout    60s
 *** Test Cases ***
 Should validate required admin fields
     [Documentation]    Validar campos obrigatórios

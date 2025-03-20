@@ -3,6 +3,7 @@ Documentation         Página de cadastro de parceiro
 
 Resource              ../../resources/base.resource
 
+Suite Setup       Set Browser Timeout    60s
 Suite Teardown    Close Browser
 
 *** Test Cases ***
