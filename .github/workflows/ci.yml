@@ -85,7 +85,6 @@ jobs:
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
-          .venv/bin/rfbrowser init  # Garante instalação do Playwright e navegadores
 
       - name: 📂 Instalar Dependências Web (Node.js)
         run: cd web && npm install
@@ -109,6 +108,9 @@ jobs:
 
       - name: 🤖 Executar Testes Automatizados Web (modo headless otimizado)
         run: |
+            Xvfb :99 -screen 0 1920x1080x24 &  # Inicia o servidor X virtual
+            export DISPLAY=:99                 # Define a variável DISPLAY
+            .venv/bin/rfbrowser init           # Garante instalação do Playwright correto
             .venv/bin/robot \
               --variable BROWSER:chromium \
               --variable HEADLESS:True \
