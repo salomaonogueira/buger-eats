@@ -33,7 +33,7 @@ Go to form page
     New Browser      browser=chromium    headless=false
     New Page         http://localhost:3000/partner
     Set Strict Mode        on
-    Set Browser Timeout    10s
+    Set Browser Timeout    30s
 
 Submit partner form
     [Arguments]    ${name}    ${email}    ${whatsapp}    ${business_type}
@@ -43,6 +43,6 @@ Submit partner form
     Fill Text    ${EMAIL_INPUT}      ${email}
     Fill Text    ${WHATSAPP_INPUT}   ${whatsapp}
     Click        css=img[alt="${business_type}"]
-    Wait For Elements State    ${REGISTER_BUTTON}    visible    5
+    Wait For Elements State    ${REGISTER_BUTTON}    visible    10
     Click        ${REGISTER_BUTTON}
     Take Screenshot

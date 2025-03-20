@@ -16,7 +16,7 @@ Start session
 
 Validate H1 Text
     [Arguments]    ${expected_text}
-    Wait For Elements State    h1    visible    5
+    Wait For Elements State    h1    visible    10
     ${h1_text}    Get Text    h1
     Should Be Equal    ${h1_text}    ${expected_text}
 

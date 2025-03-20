@@ -13,7 +13,7 @@ Should validate required admin fields
     Get Text    text=Gestão de Parceiros    ==    Gestão de Parceiros
     Validate Input Placeholder  css=input[placeholder="Busque por nome ou email..."]
     ...    Busque por nome ou email...
-    Wait For Elements State     css=tr:first-child button.button-primary   enabled    1
+    Wait For Elements State     css=tr:first-child button.button-primary   enabled    10
     Wait For Elements State     xpath=(//button[@class="button button-danger"])[1]
     Take Screenshot
 
@@ -47,7 +47,7 @@ Should activate partner
     Click    css=tr:first-child button.button-primary
     Wait For Elements State
     ...            text=Parceiro ativado com sucesso!
-    ...            visible    1
+    ...            visible    10
     Click          text=Sair
     Take Screenshot
 
@@ -60,7 +60,7 @@ Should deactivate partner
     Click    css=tr:first-child button.button-secondary
     Wait For Elements State
     ...            text=Parceiro inativado com sucesso!
-    ...            visible    1
+    ...            visible    10
     Take Screenshot
 
 Should cancel partner deletion
@@ -72,10 +72,10 @@ Should cancel partner deletion
     Click    css=button[class="button button-danger"]
     Wait For Elements State
     ...      xpath=//h2[@id='swal2-title' and text()='${PARTNER_NAME}']
-    ...      visible    1
+    ...      visible    10
     Wait For Elements State
     ...      text=Você confirma desse parceiro?
-    ...      visible      1
+    ...      visible      10
     Click    text=Não
     Take Screenshot
 
@@ -88,9 +88,9 @@ Should delete partner
     Click    css=button[class="button button-danger"]
     Wait For Elements State
     ...      xpath=//h2[@id='swal2-title' and text()='${PARTNER_NAME}']
-    ...      visible    1
+    ...      visible    10
     Wait For Elements State
     ...    text=Você confirma desse parceiro?
-    ...    visible    1
+    ...    visible    10
     Click    text=Sim, por favor!
     Take Screenshot

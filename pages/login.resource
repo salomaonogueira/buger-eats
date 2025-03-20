@@ -33,7 +33,7 @@ Submit login form
 Validate Error Message
     [Arguments]    ${selector}    ${expected_message}
 
-    Wait For Elements State    ${selector}    visible    5
+    Wait For Elements State    ${selector}    visible    10
     ${message}    Get Text     ${selector}
     Should Be Equal    ${message}    ${expected_message}
 

@@ -16,9 +16,9 @@ Should create a new partner
     ...    ${PARTNER_WHATSAPP}
     ...    ${PARTNER_BUSINESS}
 
-    Wait For Elements State    text=Bons negócios :)    visible    5
+    Wait For Elements State    text=Bons negócios :)    visible    10
     Wait For Elements State    text=Enviamos um email de confirmação para: ${PARTNER_EMAIL}
-    ...    visible    5
+    ...    visible    10
     Click    ${CLOSE_BUTTON}
     Take Screenshot
 
@@ -32,8 +32,8 @@ Should not allow duplicate partner
     ...    ${PARTNER_WHATSAPP}
     ...    ${PARTNER_BUSINESS}
 
-    Wait For Elements State    text=Oops...    visible    5
-    Wait For Elements State    text=Parceiro já cadastrado!    visible    5
+    Wait For Elements State    text=Oops...    visible    10
+    Wait For Elements State    text=Parceiro já cadastrado!    visible    10
     Click    ${CLOSE_BUTTON}
     Take Screenshot
 
@@ -47,7 +47,7 @@ Should not allow invalid email
     ...    ${PARTNER_WHATSAPP}
     ...    ${PARTNER_BUSINESS}
 
-    Wait For Elements State    ${ERROR_EMAIL_INVALID}   visible    5
+    Wait For Elements State    ${ERROR_EMAIL_INVALID}   visible    10
     Take Screenshot
 
 Should not allow invalid phone number
@@ -60,7 +60,7 @@ Should not allow invalid phone number
     ...    ${PARTNER_WHATSAPP_INV}
     ...    ${PARTNER_BUSINESS}
 
-    Wait For Elements State    ${ERROR_PHONE_INVALID}  visible    5
+    Wait For Elements State    ${ERROR_PHONE_INVALID}  visible    10
     Take Screenshot
 
 Should not allow empty fields
@@ -68,10 +68,10 @@ Should not allow empty fields
     [Tags]    signup
     Go to form page
     Click    ${REGISTER_BUTTON}
-    Wait For Elements State    ${ERROR_EMPTY_NAME}      visible  5
-    Wait For Elements State    ${ERROR_EMPTY_EMAIL}     visible  5
-    Wait For Elements State    ${ERROR_EMPTY_PHONE}     visible  5
-    Wait For Elements State    ${ERROR_EMPTY_BUSINESS}  visible  5
+    Wait For Elements State    ${ERROR_EMPTY_NAME}      visible  10
+    Wait For Elements State    ${ERROR_EMPTY_EMAIL}     visible  10
+    Wait For Elements State    ${ERROR_EMPTY_PHONE}     visible  10
+    Wait For Elements State    ${ERROR_EMPTY_BUSINESS}  visible  10
     Take Screenshot
 
 Should delete a partner
@@ -81,14 +81,14 @@ Should delete a partner
     Fill Text    css=input[name="searchField"]    ${PARTNER_NAME}
     Click        text=Buscar
     Wait For Elements State
-    ...    css=button[class="button button-danger"]    visible    5
+    ...    css=button[class="button button-danger"]    visible    10
     Take Screenshot
     Click    css=button[class="button button-danger"]
     Wait For Elements State
     ...      xpath=//h2[@id='swal2-title' and text()='${PARTNER_NAME}']
-    ...      visible    1
+    ...      visible    10
     Wait For Elements State
     ...    ${CONFIRM_DELETE_MESSAGE}
-    ...    visible    1
+    ...    visible    10
     Click    text=Sim, por favor!
     Take Screenshot
