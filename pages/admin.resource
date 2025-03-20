@@ -5,15 +5,15 @@ Resource              ../resources/base.resource
 
 *** Keywords ***
 Validar Visibilidade dos Elementos
-    Wait For Elements State    img[alt="Buger Eats"]       visible    1
-    Wait For Elements State    text=Gestão de Parceiros    visible    1
+    Wait For Elements State    img[alt="Buger Eats"]       visible    5
+    Wait For Elements State    text=Gestão de Parceiros    visible    5
     Wait For Elements State    css=input[placeholder="Busque por nome ou email..."]    visible    1
-    Wait For Elements State    text=Buscar    visible    1
-    Wait For Elements State    text=Status    visible    1
-    Wait For Elements State    text=Nome      visible    1
-    Wait For Elements State    xpath=//th[normalize-space(text())="Email"]    visible    1
-    Wait For Elements State    text=Whatsapp  visible    1
-    Wait For Elements State    xpath=//th[normalize-space(text())="Negócio"]  visible    1
+    Wait For Elements State    text=Buscar    visible    5
+    Wait For Elements State    text=Status    visible    5
+    Wait For Elements State    text=Nome      visible    5
+    Wait For Elements State    xpath=//th[normalize-space(text())="Email"]    visible    5
+    Wait For Elements State    text=Whatsapp  visible    5
+    Wait For Elements State    xpath=//th[normalize-space(text())="Negócio"]  visible    5
 
 Start Admin Session
     Start session
