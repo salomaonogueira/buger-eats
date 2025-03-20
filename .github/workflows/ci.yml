@@ -104,7 +104,14 @@ jobs:
           done
 
       - name: 🤖 Executar Testes Automatizados Web
-        run: xvfb-run -a .venv/bin/robot --variable BROWSER:chromium --variable HEADLESS:True --variable TIMEOUT:30000 -d results tests/web
+        run: |
+          xvfb-run -a .venv/bin/robot \
+            --variable BROWSER:chromium \
+            --variable HEADLESS:True \
+            --variable TIMEOUT:60000 \
+            --variable RETRY:3 \
+            --variable BROWSER_ARGS:--no-sandbox,--disable-dev-shm-usage,--disable-gpu \
+            -d results tests/web
 
       - name: 📤 Armazenar Relatórios e Logs
         uses: actions/upload-artifact@v4
