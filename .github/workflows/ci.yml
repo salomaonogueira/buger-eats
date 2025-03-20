@@ -109,15 +109,14 @@ jobs:
 
       - name: 🤖 Executar Testes Automatizados Web (modo headless otimizado)
         run: |
-          Xvfb :99 -screen 0 1920x1080x24 &  # Inicia o servidor X virtual
-          export DISPLAY=:99                 # Define a variável DISPLAY
           .venv/bin/robot \
-            --variable BROWSER:chromium \
-            --variable HEADLESS:True \
-            --variable TIMEOUT:30000 \
-            --variable RETRY:2 \
-            --variable BROWSER_ARGS:--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--disable-software-rasterizer,--disable-setuid-sandbox,--disable-extensions,--disable-background-networking,--mute-audio,--disable-popup-blocking,--disable-ipc-flooding-protection \
-            -d results tests/web
+          --variable BROWSER:chromium \
+          --variable HEADLESS:True \
+          --variable TIMEOUT:60000 \
+          --variable RETRY:3 \
+          --variable BROWSER_ARGS:--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--disable-software-rasterizer,--disable-setuid-sandbox,--disable-extensions,--disable-background-networking,--mute-audio,--disable-popup-blocking,--disable-ipc-flooding-protection \
+          --loglevel TRACE \
+           -d results tests/web
 
       - name: 📤 Armazenar Relatórios e Logs
         uses: actions/upload-artifact@v4
