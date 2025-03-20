@@ -80,11 +80,23 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: 🖥️ Instalar Playwright e Dependências
+      - name: 📦 Instalar Dependências do Sistema para BrowserLibrary
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            libgtk-4-1 libgraphene-1.0-0 libwoff1 libwoff2-1 libvpx7 libevent-2.1-7 \
+            libopus0 libgstallocators-1.0-0 libgstapp-1.0-0 libgstpbutils-1.0-0 \
+            libgstaudio-1.0-0 libgstgl-1.0-0 libgsttag-1.0-0 libgstvideo-1.0-0 \
+            libgstcodecparsers-1.0-0 libgstfft-1.0-0 libflite1 libflite-cmu-* \
+            libavif13 libharfbuzz-icu0 libsecret-1-0 libhyphen0 libmanette-0.2-0 \
+            libgles2 libx264-163 xvfb
+
+      - name: 🖥️ Instalar Apenas o BrowserLibrary (sem Playwright extra)
         run: |
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
+          .venv/bin/rfbrowser init  # SOMENTE ESSA INSTALAÇÃO É NECESSÁRIA!
 
       - name: 📂 Instalar Dependências Web (Node.js)
         run: cd web && npm install
@@ -108,16 +120,15 @@ jobs:
 
       - name: 🤖 Executar Testes Automatizados Web (modo headless otimizado)
         run: |
-            Xvfb :99 -screen 0 1920x1080x24 &  # Inicia o servidor X virtual
-            export DISPLAY=:99                 # Define a variável DISPLAY
-            .venv/bin/rfbrowser init           # Garante instalação do Playwright correto
-            .venv/bin/robot \
-              --variable BROWSER:chromium \
-              --variable HEADLESS:True \
-              --variable TIMEOUT:30000 \
-              --variable RETRY:2 \
-              --variable BROWSER_ARGS:--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--disable-software-rasterizer,--disable-setuid-sandbox,--disable-extensions,--disable-background-networking,--mute-audio,--disable-popup-blocking,--disable-ipc-flooding-protection \
-              -d results tests/web
+          Xvfb :99 -screen 0 1920x1080x24 &  # Inicia o servidor X virtual
+          export DISPLAY=:99                 # Define a variável DISPLAY
+          .venv/bin/robot \
+            --variable BROWSER:chromium \
+            --variable HEADLESS:True \
+            --variable TIMEOUT:30000 \
+            --variable RETRY:2 \
+            --variable BROWSER_ARGS:--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--disable-software-rasterizer,--disable-setuid-sandbox,--disable-extensions,--disable-background-networking,--mute-audio,--disable-popup-blocking,--disable-ipc-flooding-protection \
+            -d results tests/web
 
       - name: 📤 Armazenar Relatórios e Logs
         uses: actions/upload-artifact@v4
