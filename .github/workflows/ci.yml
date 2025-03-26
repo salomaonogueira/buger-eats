@@ -136,7 +136,7 @@ on:
     branches: [main, develop]
 
 jobs:
-  # Job de Configuração Inicial
+  # Configuração inicial
   setup:
     runs-on: ubuntu-latest
     outputs:
@@ -157,7 +157,7 @@ jobs:
         run: |
           if [ -d "web" ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
 
-  # Job de Testes da API
+  # Testes de API
   api-test:
     needs: setup
     if: needs.setup.outputs.api_exists == 'true'
@@ -197,7 +197,7 @@ jobs:
       - name: 🧪 Executar Testes de API
         run: .venv/bin/robot tests/api
 
-  # Job de Testes Web
+  # Testes Web
   web-test:
     needs: [setup, api-test]
     if: needs.setup.outputs.web_exists == 'true'
@@ -207,18 +207,18 @@ jobs:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
-      - name: 🖥️ Instalar Dependências Python e BrowserLibrary
+      - name: 📦 Instalar Dependências Python e BrowserLibrary
         run: |
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install robotframework-browser
+          .venv/bin/pip install -r requirements.txt
           .venv/bin/rfbrowser init
 
       - name: Configurar o Xvfb
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb
-          Xvfb :99 -screen 0 1280x1024x24 &
+          Xvfb :99 -screen 0 1280x1024x24 -ac &
 
       - name: 📂 Instalar Dependências Web (Node.js)
         run: cd web && npm install
