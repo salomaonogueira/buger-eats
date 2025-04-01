@@ -1,139 +1,11 @@
-# name: buger-eats CI
-
-# on:
-#   push:
-#     branches: [main, develop]
-#   pull_request:
-#     branches: [main, develop]
-
-# jobs:
-#   setup:
-#     runs-on: ubuntu-latest
-#     outputs:
-#       api_exists: ${{ steps.check_api.outputs.exists }}
-#       web_exists: ${{ steps.check_web.outputs.exists }}
-
-#     steps:
-#       - name: 📥 Checkout do Código
-#         uses: actions/checkout@v4
-
-#       - name: Verificar Existência da Pasta API
-#         id: check_api
-#         run: |
-#           if [ -d "api" ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
-
-#       - name: Verificar Existência da Pasta Web
-#         id: check_web
-#         run: |
-#           if [ -d "web" ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
-
-#   api-test:
-#     needs: setup
-#     if: needs.setup.outputs.api_exists == 'true'
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: 📥 Checkout do Código
-#         uses: actions/checkout@v4
-
-#       - name: 📦 Configurar Ambiente Python
-#         run: |
-#           python -m venv .venv
-#           .venv/bin/pip install --upgrade pip
-#           .venv/bin/pip install -r requirements.txt
-
-#       - name: 🔧 Criar Arquivo .env para a API
-#         run: |
-#           echo "MONGO_URI=${{ secrets.MONGO_URI }}" > api/.env
-#           echo "MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}" >> api/.env
-#           echo "MONGO_COLLECTION_NAME=${{ secrets.MONGO_COLLECTION_NAME }}" >> api/.env
-#           echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
-#           echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
-
-#       - name: 🚀 Instalar Dependências da API (Node.js)
-#         run: cd api && npm install
-
-#       - name: 🚀 Iniciar API
-#         run: cd api && npm start &
-#         shell: bash
-#         env:
-#           MONGO_URI: ${{ secrets.MONGO_URI }}
-#           MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
-#           MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
-#           AMQP_URL: ${{ secrets.AMQP_URL }}
-#           QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
-
-#       - name: 🧪 Executar Testes de API
-#         run: .venv/bin/robot tests/api
-
-#   web-test:
-#     needs: [setup, api-test]
-#     if: needs.setup.outputs.web_exists == 'true'
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: 📥 Checkout do Código
-#         uses: actions/checkout@v4
-
-#       - name: 📦 Configurar Python
-#         uses: actions/setup-python@v5
-#         with:
-#           python-version: "3.10"
-
-#       - name: 🖥️ Instalar Apenas o BrowserLibrary (sem Playwright extra)
-#         run: |
-#           python -m venv .venv
-#           .venv/bin/pip install --upgrade pip
-#           .venv/bin/pip install -r requirements.txt
-#           .venv/bin/rfbrowser init  # SOMENTE ESSA INSTALAÇÃO É NECESSÁRIA!
-
-#       - name: 📂 Instalar Dependências Web (Node.js)
-#         run: cd web && npm install
-
-#       - name: 🚀 Iniciar Web
-#         run: cd web && npm start &
-#         shell: bash
-
-#       - name: 🕒 Aguardar o Servidor Web estar pronto
-#         run: |
-#           echo "Aguardando servidor web..."
-#           for i in {1..20}; do
-#             if curl -s http://localhost:3000 > /dev/null; then
-#               echo "Servidor web está pronto!"
-#               break
-#             else
-#               echo "Tentativa $i: Servidor ainda não está pronto..."
-#               sleep 5
-#             fi
-#           done
-
-#       - name: 🤖 Executar Testes Automatizados Web (modo headless otimizado)
-#         env:
-#           DISPLAY: :99 #Garante que o DISPLAY está definido, caso não tenha sido herdado
-#         run: |
-#             .venv/bin/robot \
-#             --variable BROWSER:chromium \
-#             --variable HEADLESS:True \
-#             --variable TIMEOUT:60000 \
-#             --variable RETRY:3 \
-#             --variable BROWSER_ARGS:"--no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer --disable-setuid-sandbox --disable-extensions --disable-background-networking --mute-audio --disable-popup-blocking --disable-ipc-flooding-protection" \
-#             --loglevel TRACE \
-#              -d results tests/web
-
-#       - name: 📤 Armazenar Relatórios e Logs
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: relatorios-de-testes
-#           path: results/
-
-
-name: buger-eats CI
+name: Buger Eats CI
 
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:
 
 jobs:
   # Configuração inicial
@@ -147,12 +19,12 @@ jobs:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
-      - name: Verificar Existência da Pasta API
+      - name: 🔍 Verificar Existência da Pasta API
         id: check_api
         run: |
           if [ -d "api" ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
 
-      - name: Verificar Existência da Pasta Web
+      - name: 🔍 Verificar Existência da Pasta Web
         id: check_web
         run: |
           if [ -d "web" ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
@@ -168,6 +40,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📦 Configurar Ambiente Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 🔧 Criar Ambiente Virtual e Instalar Dependências
         run: |
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
@@ -186,13 +63,15 @@ jobs:
 
       - name: 🚀 Iniciar API
         run: cd api && npm start &
-        shell: bash
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
           MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
           AMQP_URL: ${{ secrets.AMQP_URL }}
           QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
+
+      - name: 🕒 Aguardar API estar pronta
+        run: sleep 5
 
       - name: 🧪 Executar Testes de API
         run: .venv/bin/robot tests/api
@@ -207,18 +86,19 @@ jobs:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
-      - name: 📦 Instalar Dependências Python e BrowserLibrary
+      - name: 📦 Configurar Ambiente Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 🔧 Criar Ambiente Virtual e Instalar Dependências
         run: |
           python -m venv .venv
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
-          .venv/bin/rfbrowser init
 
-      - name: Configurar o Xvfb
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-          Xvfb :99 -screen 0 1280x1024x24 -ac &
+      - name: 🔧 Inicializar BrowserLibrary
+        run: .venv/bin/rfbrowser init
 
       - name: 📂 Instalar Dependências Web (Node.js)
         run: cd web && npm install
@@ -240,15 +120,21 @@ jobs:
             fi
           done
 
+      - name: Configurar o Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          Xvfb :99 -screen 0 1280x1024x24 -ac &
+
       - name: 🤖 Executar Testes Automatizados Web
         env:
           DISPLAY: :99
         run: |
-            .venv/bin/robot \
-            --variable BROWSER:chromium \
-            --variable HEADLESS:True \
-            --variable BROWSER_ARGS:"--no-sandbox --disable-dev-shm-usage --disable-gpu" \
-            -d results tests/web
+          .venv/bin/robot \
+          --variable BROWSER:chromium \
+          --variable HEADLESS:True \
+          --variable BROWSER_ARGS:"--no-sandbox --disable-dev-shm-usage --disable-gpu" \
+          -d results tests/web
 
       - name: 📤 Armazenar Relatórios e Logs
         uses: actions/upload-artifact@v4
