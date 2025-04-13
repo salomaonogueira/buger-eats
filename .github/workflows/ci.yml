@@ -1,67 +1,84 @@
-name: Test Workflow
+name: Buger Eats API CI
+
 on:
   push:
-    branches:
-      - main
+    branches: [main, develop]
   pull_request:
-    branches:
-      - main
+    branches: [main, develop]
+  workflow_dispatch:
 
 jobs:
-  test:
+  # Configuração inicial e Testes de API
+  api-test:
     runs-on: ubuntu-latest
-
     steps:
       # Checkout do Código
-      - name: ⬇️ Checkout do Código
+      - name: 📥 Checkout do Código
         uses: actions/checkout@v4
 
-      # Configurar Python
-      - name: 🐍 Configurar Python
-        uses: actions/setup-python@v4
+      # Verificar Existência da Pasta API
+      - name: 🔍 Verificar Existência da Pasta API
+        run: echo "api_exists=$( [ -d 'api' ] && echo true || echo false )" >> $GITHUB_ENV
+
+      # Configuração Condicional
+      - name: ⏭️ Ignorar se Pasta API Não Existe
+        if: env.api_exists == 'false'
+        run: echo "Pasta 'api' não encontrada. Encerrando job."
+        continue-on-error: true
+
+      # Configurar Ambiente Python
+      - name: 📦 Configurar Ambiente Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
+
+      # Criar Ambiente Virtual e Instalar Dependências
+      - name: 🐍 Configurar Ambiente e Dependências
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
       # Criar Arquivo `.env`
       - name: 🔧 Criar Arquivo `.env`
         run: |
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> api/.env
-          echo "MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}" >> api/.env
-          echo "MONGO_COLLECTION_NAME=${{ secrets.MONGO_COLLECTION_NAME }}" >> api/.env
-          echo "AMQP_URL=${{ secrets.AMQP_URL }}" >> api/.env
-          echo "QUEUE_NAME=${{ secrets.QUEUE_NAME }}" >> api/.env
+          cat <<EOF > api/.env
+          MONGO_URI=${{ secrets.MONGO_URI }}
+          MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}
+          MONGO_COLLECTION_NAME=${{ secrets.MONGO_COLLECTION_NAME }}
+          AMQP_URL=${{ secrets.AMQP_URL }}
+          QUEUE_NAME=${{ secrets.QUEUE_NAME }}
+          EOF
 
-      # Instalar Dependências
-      - name: 📦 Instalar Dependências
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
+      # Instalar Dependências Node.js
+      - name: 🚀 Instalar Dependências da API
+        run: cd api && npm install
 
-      # Instalar Robot Framework e Bibliotecas
-      - name: 📌 Instalar Robot Framework e Bibliotecas
-        run: |
-          source .venv/bin/activate
-          pip install robotframework robotframework-seleniumlibrary robotframework-requests robotframework-browser
-          rfbrowser init
+      # Iniciar API
+      - name: 🚀 Iniciar API
+        run: cd api && npm start &
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGO_DB_NAME: ${{ secrets.MONGO_DB_NAME }}
+          MONGO_COLLECTION_NAME: ${{ secrets.MONGO_COLLECTION_NAME }}
+          AMQP_URL: ${{ secrets.AMQP_URL }}
+          QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
 
-      # Instalar Dependências do Sistema para Playwright
-      - name: ⚙️ Instalar Dependências do Sistema para Playwright
+      # Aguardar API Estar Pronta
+      - name: 🕒 Aguardar API
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libnss3 libatk1.0-0 libcups2 libdbus-1-3 libxcomposite1 libxrandr2 libxss1 libxcursor1 libasound2 libxdamage1 libxinerama1 libpango1.0-0 libgtk-3-0 libxext6 libx11-xcb1
-          sudo apt-get install -y fonts-liberation lsb-release xdg-utils wget
+          for i in {1..15}; do
+            curl -s http://localhost:3333/health | grep -q "ok" && break || sleep 2
+          done || echo "⚠️ Timeout ao aguardar API."
 
-      # Executar Testes Automatizados
-      - name: 🚀 Executar Testes Automatizados
-        run: |
-          source .venv/bin/activate
-          robot -d results tests/web
+      # Executar Testes de API
+      - name: 🧪 Executar Testes
+        run: .venv/bin/robot -d results --loglevel INFO tests/api
 
       # Armazenar Relatórios e Logs
-      - name: 📁 Armazenar Relatórios e Logs
+      - name: 📤 Armazenar Relatórios e Logs
         uses: actions/upload-artifact@v4
         with:
-          name: relatorios-de-testes
+          name: relatorios-de-testes-api
           path: results/
