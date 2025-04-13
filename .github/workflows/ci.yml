@@ -46,7 +46,7 @@ jobs:
           pip install robotframework robotframework-seleniumlibrary robotframework-requests robotframework-browser
           rfbrowser init
 
-      # Verificar Ambiente e Instalar Dependências do Playwright
+      # Instalar Dependências do Sistema para Playwright
       - name: ⚙️ Instalar Dependências do Sistema para Playwright
         run: |
           sudo apt-get update
@@ -61,7 +61,7 @@ jobs:
 
       # Armazenar Relatórios e Logs
       - name: 📁 Armazenar Relatórios e Logs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: relatorios-de-testes
           path: results/
