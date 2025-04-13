@@ -76,15 +76,19 @@ jobs:
       - name: 🧪 Executar Testes de API
         run: .venv/bin/robot tests/api
 
-  # Testes Web
   web-test:
-    needs: [setup, api-test]
+    needs: [setup]
     if: needs.setup.outputs.web_exists == 'true'
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout do Código
         uses: actions/checkout@v4
+
+      - name: 📦 Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
       - name: 📦 Configurar Ambiente Python
         uses: actions/setup-python@v5
@@ -97,6 +101,10 @@ jobs:
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
 
+      # Usar a action oficial do Microsoft Playwright
+      - name: 🎭 Configurar Playwright
+        uses: microsoft/playwright-github-action@v1
+
       - name: 🔧 Inicializar BrowserLibrary
         run: .venv/bin/rfbrowser init
 
@@ -107,36 +115,27 @@ jobs:
         run: cd web && npm start &
         shell: bash
 
-      - name: 🕒 Aguardar o Servidor Web estar pronto
+      - name: 🕒 Aguardar o Servidor Web
         run: |
           echo "Aguardando servidor web..."
-          for i in {1..20}; do
+          for i in {1..30}; do
             if curl -s http://localhost:3000 > /dev/null; then
               echo "Servidor web está pronto!"
               break
-            else
-              echo "Tentativa $i: Servidor ainda não está pronto..."
-              sleep 5
             fi
+            echo "Tentativa $i: Servidor não está pronto..."
+            sleep 2
           done
 
-      - name: Configurar o Xvfb
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-          Xvfb :99 -screen 0 1280x1024x24 -ac &
-
       - name: 🤖 Executar Testes Automatizados Web
-        env:
-          DISPLAY: :99
         run: |
           .venv/bin/robot \
           --variable BROWSER:chromium \
           --variable HEADLESS:True \
-          --variable BROWSER_ARGS:"--no-sandbox --disable-dev-shm-usage --disable-gpu" \
           -d results tests/web
 
       - name: 📤 Armazenar Relatórios e Logs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: relatorios-de-testes
