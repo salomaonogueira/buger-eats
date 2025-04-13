@@ -19,10 +19,6 @@ jsonpath-ng==1.7.0
 pymongo==4.10.1
 robot-mongodb-library==0.0.5
 
-# 🔹 Banco de dados (PostgreSQL e MySQL)
-psycopg2==2.9.10
-mysql-connector-python==9.0.0
-
 # 🔹 Manipulação de JSON e YAML
 PyYAML==6.0.1
 jsonschema==4.23.0
